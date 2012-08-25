@@ -1,0 +1,67 @@
+
+    //											  /
+   // Yahooからトピックニュースを取ってくるAPI	 /
+  //  作者：Tatumaki					   		/
+ //   										   /
+//____________________________________________/
+
+
+!`nako/DevID.nako`を取り込む
+
+/* カテゴリー一覧
+** domestic ：国内
+** world ：海外
+** economy ：経済
+** entertainment ：エンターテインメント
+** sports ：スポーツ
+** computer ：コンピュータ
+** science ：サイエンス
+** local ：地域
+*/
+
+!CATEGORY=`domestic
+world
+economy
+entertainment
+sports
+computer
+science
+local
+`
+
+
+# !! 単体テスト用のフラグです。このファイル単体で操作する際に値を1にして下さい。 !!
+
+!NEWSAPI_DEBUG = 0
+
+経過ダイアログ = 0
+
+もし、NEWSAPI_DEBUGならば、
+	GetTopicName_OverView_Url(GetTopicNews(2))を言う
+	
+	終了
+
+●GetTopicNews(category)
+	もし、category/1 == categoryならば、
+		category = CATEGORY[category]
+	URLとは文字列 = 「http://news.yahooapis.jp/NewsWebService/V2/topics?appid={YAHOOAPPID}&category={category}」
+	dataとは文字列=(URLからHTTPデータ取得してSJIS変換)
+	
+	dataで戻る
+
+●GetTopicName_OverView_Url(xml)
+	Topicとは配列 = xmlから`TopicName`のタグ切り出し
+	OverViewとは配列 = xmlから`OverView`のタグ切り出し
+	Urlとは配列 = xmlから`Url`のタグ切り出し
+	
+	Resultとは配列
+	(Topicの配列要素数)回
+		回数 = 回数 -1
+		Result[回数,0] = Topic[回数]
+		Result[回数,1] = OverView[回数]
+		Result[回数,2] = Url[回数]
+	ここまで
+	Result = Resultのタグ削除	
+	Resultで戻る
+
+	
