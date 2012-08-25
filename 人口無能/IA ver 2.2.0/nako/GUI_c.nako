@@ -1,0 +1,49 @@
+■GUI_c　+Emotion_c
+	・{非公開}txtlog
+	・{非公開}Drawtxt
+	・{非公開}tx_num{=0}
+	・{非公開}imgnum{=2}
+	・{非公開}顔画像
+	・ログ作成(input,output)～
+		Drawtxt = ""
+		TStxtとは文字列 = ""
+		TStxtに「{IA→Name} > 」を追加
+		TStxtにoutputを一行追加
+		TStxtに"あなた > "を追加
+		TStxtにinputを追加
+		Drawtxt = Drawtxtの1に「{改行}」を文字挿入
+		Drawtxt = Drawtxtの1にTStxtを文字挿入
+		
+		TStxt = ""
+		TStxtに"あなた > "を追加
+		TStxtにinputを追加
+		txtlogにTStxtを一行追加
+		TStxt = ""
+		TStxtに「{IA→Name} > 」を追加
+		TStxtにoutputを追加
+		txtlogにTStxtを一行追加		
+		
+	・顔画像制御()～
+		もし、GetMood() >= 5ならば、
+			imgnum = 1
+		もし、GetMood() < 5&&GetMood() > -5ならば、
+			imgnum = 2 
+		もし、GetMood() <= -5ならば、
+			imgnum = 3
+			
+		3回
+			顔イメージ[回数]→可視 = 0
+		顔イメージ[imgnum]→可視 = 1		
+			
+	・ログスクロール()～
+		tx_num = tx_num + 1
+		もし、tx_num >= 10 ならば、//ログスクロール
+			Drawtxt = Drawtxtの2から30を配列取り出す
+			Drawtxtに「{改行}」を追加
+	・ログ取得(input,output)～
+		ログ作成(input,output)
+		顔画像制御()
+		Drawtxtで戻る
+
+	・GetLog()～
+		txtlogで戻る

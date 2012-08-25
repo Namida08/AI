@@ -1,0 +1,32 @@
+■Emotion_c
+	・{非公開}mood{=0}
+	・{非公開}mood_max{=10}
+	・{非公開}mood_min{=-10}
+	・{非公開}mood_recover{=0.5}
+	・{非公開}flag
+	・recovermood()～
+		もし、mood > 0ならば、
+			mood = mood - mood_recover		
+		もし、mood < 0ならば、
+			mood = mood + mood_recover
+	・譏嫌値抽出(input)～
+		譏嫌値とは文字列 = inputを".+##"で正規表現マッチ
+		もし、(譏嫌値) != ""ならば、
+			flag=1
+			譏嫌値 = 譏嫌値から"#"まで切り取る
+			譏嫌値で戻る
+		違えば、
+			flag=0
+			0で戻る
+	・upmood(input)～
+		mood = mood + 譏嫌値抽出(input)
+		もし、mood > mood_maxならば、
+			mood = mood_max
+		もし、mood < mood_minならば、
+			mood = mood_min
+		outputとは変数 = input
+		もし、flag=1ならば、
+			outputから"##"まで切り取る
+		outputで戻る
+	・GetMood()～
+		moodで戻る

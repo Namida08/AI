@@ -1,0 +1,146 @@
+/*#-----------------------------------------------------------------------
+タスク
+Template学習、ほかにいい方法ないか？
+TemplateResponder途中
+
+当たり障りない言葉に対する返答　現在ランダム
+～って知っていますか？	応答
+質問テキスト	話題
+
+#-----------------------------------------------------------------------*/
+!"nako/GAMERSLIB.nako"を取り込む
+!"nako/Dictionary_c.nako"を取り込む
+!"nako/Emotion_c.nako"を取り込む
+!"nako/GUI_c.nako"を取り込む
+!"nako/Study_c.nako"を取り込む
+!"nako/Responder_c.nako"を取り込む
+
+!"nako/GUI作成.nako"を取り込む
+
+■Person_c
+	・{非公開}Name
+	・{非公開}Relation	//0 AI本体,1 ユーザー,2 第三者
+	・{非公開}Gender	//0 男,1 女
+	・{非公開}Like
+	・{非公開}Dislike
+	・Person_Set(n,r,g,l,d)～
+		Name = n
+		Relation = r
+		Gender = g
+		Like = l
+		Dislike = d
+	・GetName()～
+		Nameで戻る
+	・GetRelation()～
+		Relationで戻る
+	・GetGender()～
+		Genderで戻る
+	・GetLike()～
+		Likeで戻る
+	・GetDislike()～
+		Dislikeで戻る
+　		
+■AIメイン　＋Responder_c　＋Person_c
+	・{非公開}response
+	・{非公開}request
+	・応答メソッド(input)～
+		request = リクエスト送信(input)
+		もし、GetWhatResponderword() == ""ならば、
+			もし、(inputを"((って|て)何)|(を|で)*(検索)|(を|で|って|て)*(調べて)|(を|で|って|て)*((ググ|ぐぐ)(ル|る|って))"で正規表現マッチ) != ""ならば、
+				response = GoogleResponder(input)
+			違えば、
+				反応とは整数 = 99の乱数
+				もし、反応>=0&&反応<30ならば、
+					response = WhatResponder(input,request)
+				違えば、もし、反応>=30&&反応<31ならば、
+					response = RondomResponder()
+				違えば、もし、反応>=31&&反応<50ならば、
+					response = PatternResponder(input)
+				違えば、もし、反応>=50&&反応<100ならば、
+					response = TemplateResponder(input,request)
+		違えば、
+			response = ReWhatResponder(input)
+		responseで戻る	
+	・学習メソッド(input)～
+		学習メイン(input)
+	・終了メソッド()～
+		終了テキスト保存()
+		(GetLog())と言う
+		日付とは文字列 = 「{今日}/{今}」の"/|:"を","に正規表現置換
+		//(GetLog())を「log/{日付}.txt」に保存
+
+	・リクエスト送信(input)～
+		requestとは配列 = input
+		request = requestをUTF8N変換してURLエンコード
+		request = 「http://jlp.yahooapis.jp/MAService/V1/parse?appid=NrSkwWexg66wr80BzR2tFArSl_ouJF1nwi7jUcZOeJukyKBfDDfM7Y.LIGxLRvGIBSLhBQ--&results=ma&response=surface,pos&sentence={request}」をHTTPデータ取得
+		request = requestをSJIS変換
+		request = requestの"<word_list>"から"</word_list>"まで範囲切り取る
+		request = requestの"<word>"を""に置換
+		request = requestの"</word>"を「{改行}」に置換
+		request = requestの"<surface>"を""に置換
+		request = requestの"</surface><pos>"を","に置換
+		request = requestの"</pos>"を""に置換
+		requestで戻る
+		
+	
+IAとはAIメイン
+初期化()
+
+●母艦設計
+	母艦について
+		CW=630
+		CH=470
+		タイトルは「{IA→Name}」
+		ドラッグ移動=1
+		スタイルは"枠固定"
+		終了可能=0
+		閉じた時は
+			IA→終了メソッド()
+			終了可能=1
+
+●初期化()
+	IA→Dictionary_ini()
+	IA→Person_Set("IA",0,1,"ケーキ","苦い物")
+	GUI作成()
+	
+
+#-----------------------------------------------------------------------
+#参考
+/*
+本解説
+http://d.hatena.ne.jp/itog/20090613/1244905238
+PHP正規表現チェッカー ver1.0.3
+http://www.rider-n.sakura.ne.jp/regexp/regexp.php
+人工無能うずら(人工痴能)の部屋
+http://www.din.or.jp/~ohzaki/uzura.htm
+人工無能「葵」
+http://marie.saiin.net/~kisuku/munou/
+
+http://developer.yahoo.co.jp/
+
+yahooデベロッパー　アプリケーションID
+NrSkwWexg66wr80BzR2tFArSl_ouJF1nwi7jUcZOeJukyKBfDDfM7Y.LIGxLRvGIBSLhBQ--
+
+サンプルリクエストURL
+http://jlp.yahooapis.jp/MAService/V1/parse?appid=<あなたのアプリケーションID>&results=ma,uniq&uniq_filter=9|10&sentence=%E5%BA%AD%E3%81%AB%E3%81%AF%E4%BA%8C%E7%BE%BD%E3%83%8B%E3%83%AF%E3%83%88%E3%83%AA%E3%81%8C%E3%81%84%E3%82%8B%E3%80%82
+
+
+｢何か入力してください。｣と尋ねる。
+文章はそれをUTF8N変換してURLエンコード。
+「http://jlp.yahooapis.jp/MAService/V1/parse?appid=NrSkwWexg66wr80BzR2tFArSl_ouJF1nwi7jUcZOeJukyKBfDDfM7Y.LIGxLRvGIBSLhBQ--&results=ma&response=surface,pos,feature&sentence={文章}」をHTTPデータ取得
+それをSJIS変換してレスポンスへ代入。
+
+レスポンス＝レスポンスの"<word_list>"から"</word_list>"まで範囲切り取る
+レスポンス＝レスポンスの"<word>"を""に置換
+レスポンス＝レスポンスの"</word>"を「{改行}」に置換
+レスポンス＝レスポンスの"<surface>"を""に置換
+レスポンス＝レスポンスの"</surface><pos>"を"-"に置換
+レスポンス＝レスポンスの"</pos>"を""に置換
+レスポンスと言う
+
+
+会話参考
+http://www8.atwiki.jp/nakamada_monge/pages/74.html
+
+http://blog.mwsoft.jp/article/29473361.html
+*/

@@ -1,0 +1,60 @@
+■Study_c　+Dictionary_c
+	・{非公開}Tsevetxt
+	・{非公開}Rsevetxt
+	・{非公開}WhatResponderword{=""}
+	・行列検索(input)～
+		位置とは配列
+		iで0から(TemplateDictionary_tの表列数-1)まで繰り返す
+			位置[0]＝TemplateDictionary_tのiでinputを0から表検索
+			もし、位置[0]!=-1ならば
+				位置[1]＝i	
+				位置で戻る
+		-1で戻る
+　	・名詞抽出(request)～
+　		nounとは配列 = ""
+　		wordclassとは配列 = request
+　		もし、wordclass != ""ならば、	//エラー対策
+　			iで0から(wordclassの要素数-1)まで繰り返す
+	　			もし、wordclass[i,1] == "名詞"ならば、
+	　			 	もし、noun != ""ならば、
+	　			 		nounに「{改行}」を追加
+	　			 	nounにwordclass[i,0]を追加
+		　	nounで戻る
+		違えば、
+			「エラー：リクエスト送信できませんでした」と言う
+	・未知単語抽出(request)～
+		wordとは配列 = ""
+		検索語句とは配列 = 名詞抽出(request)
+		もし、検索語句 != ""ならば、	//エラー対策
+			検索語句を反復
+				flagとは配列 = 行列検索(対象)
+				もし、flag == -1ならば、
+　					もし、word != ""ならば、
+	　 					wordに「{改行}」を追加
+　					wordに対象を追加
+			wordで戻る
+			
+	・WhatResponder作成(request)～
+		wordとは配列 = 未知単語抽出(request)
+		WhatResponderword = word[0]//////////////////////////乱数のほうがいいのか？
+		WhatResponderwordで戻る
+		
+	・TemplateDictionary学習(input)～
+		もし、(inputを"((分|わ)か(りませ|ら))|((知|し)(ら|りませ))"で正規表現マッチ) != ""ならば、
+			"そうですか…"で戻る
+		flagとは配列 = 行列検索(input)
+		もし、(flag[1] == 0)&&(flag != -1)ならば、
+			TemplateDictionary追加登録(flag[0],WhatResponderword)
+		違えば、
+			TemplateDictionary新規登録(input,WhatResponderword)
+		WhatResponderword = ""
+		"なるほど"で戻る
+
+	・学習メイン(input)～
+		Rsevetxtにinputを一行追加	//そのまま覚える
+	・終了テキスト保存()～
+		TemplateDictionary保存()
+		//Rsevetxtを"Dictionary/StudyRondomResponse.txt"に追加保存
+	
+	・GetWhatResponderword()～
+		WhatResponderwordで戻る

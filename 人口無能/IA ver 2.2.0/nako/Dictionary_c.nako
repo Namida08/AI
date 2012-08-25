@@ -1,0 +1,43 @@
+■Dictionary_c
+	・RondomResponse_t
+	・StudyRondomResponse_t	
+	・RondomNum
+	・Dictionary_t
+	・pattern
+	・phrases
+	・Template_t
+	・TemplateDictionary_t
+	・Question_t
+	・Greet_t
+	・Dictionary_ini()～
+		RondomResponse_t = "Dictionary/RondomResponse.txt"を開く
+		StudyRondomResponse_t = "Dictionary/StudyRondomResponse.txt"を開く
+		RondomResponse_tに(StudyRondomResponse_t)を追加
+		RondomNum = RondomResponse_tの要素数
+		Dictionary_t = "Dictionary/Dictionary.txt"を開く
+		txtとは配列 = Dictionary_t
+		(txtの配列要素数)回
+			txtから「{タブ}」まで切り取ってpattern[回数-1]に代入
+			txtから「{改行}」まで切り取ってphrases[回数-1]に代入
+		Template_t = "Dictionary/Template.txt"を開く
+		TemplateDictionary_t = "Dictionary/TemplateDictionary.txt"を開く
+		TemplateDictionary_t = TemplateDictionary_tをCSV取得
+		Question_t = "Dictionary/Question.txt"を開く
+		Greet_t = "Dictionary/Greet.txt"を開く
+	
+	・TemplateDictionary追加登録(i,WhatResponderword)～
+		TemplateDictionary_t = TemplateDictionary_tを表CSV変換
+		TemplateDictionary_t = TemplateDictionary_tの「,,+」を""へ正規表現置換
+		TemplateDictionary_t[i]に(WhatResponderword)を配列追加
+		TemplateDictionary_t = TemplateDictionary_tをCSV取得
+	
+	・TemplateDictionary新規登録(input,WhatResponderword)～
+		TemplateDictionary_t = TemplateDictionary_tを表CSV変換
+		TemplateDictionary_tに(「{改行}」&input&","&WhatResponderword)を追加
+		TemplateDictionary_t = TemplateDictionary_tの「,,+」を""へ正規表現置換
+		TemplateDictionary_t = TemplateDictionary_tをCSV取得
+		
+	・TemplateDictionary保存()～
+		TemplateDictionary_t = TemplateDictionary_tを表CSV変換
+		TemplateDictionary_t = TemplateDictionary_tの「,,+」を""へ正規表現置換
+		TemplateDictionary_tを"Dictionary/TemplateDictionary.txt"に保存

@@ -1,0 +1,226 @@
+■Dictionary_c
+	・RondomResponse_t
+	・Dictionary_t
+	・StudyDictionary_t
+	・pattern
+	・phrases
+	・ini()～
+		RondomResponse_t = 「RondomResponse.txt」を開く
+		Dictionary_t = 「Dictionary.txt」を開く
+		StudyDictionary_t = 「StudyDictionary.txt」を開く
+		Dictionary_tに(StudyDictionary_t)を追加
+		txtとは変数 = Dictionary_t
+		(txtの配列要素数)回
+			txtから「{タブ}」まで切り取ってpattern[回数-1]に代入
+			txtから「{改行}」まで切り取ってphrases[回数-1]に代入
+
+■Responder_c　＋Dictionary_c
+	・res
+	・WhatResponder(input)～
+		res=input&"って何？"
+		resで戻る
+	・RondomResponder()～
+		確率とは整数 = 3の乱数
+		res = RondomResponse_t[確率]
+		resで戻る
+	・PatternResponder(input)～
+		0から((patternの配列要素数)-1)まで繰り返す
+			マッチ文字とは変数 = inputを(pattern[回数])で正規表現マッチ
+			もし、(マッチ文字) != 空ならば、
+				M_phrasesとは変数 = phrases[回数]
+				マッチ数とは整数 = M_phrasesで"|"の出現回数
+				もし、マッチ数 != 0ならば、
+					D_phrasesとは変数 = M_phrasesを"|"で区切る
+					確率とは整数 = （マッチ数+1)の乱数
+					res=D_phrases[確率]
+				違えば、
+					res=M_phrases
+				res = resの"%match%"をマッチ文字に置換
+				res = 特殊コード置換(res)
+				resで戻る
+				抜ける
+			違えば、
+				RondomResponder()
+	
+	・特殊コード置換(input)～
+		res2とは変数 = input
+		nowtimeとは変数 = (今)
+		nowtime=nowtimeを":"で区切る
+		daytimeとは変数 = (今日)
+		daytime=daytimeを"/"で区切る
+		
+		time[0]=daytime[0]&"年"
+		time[1]=daytime[1]&"月"
+		time[2]=daytime[2]&"日"
+		time[3]=今日の曜日&"曜日"
+		time[4]=nowtime[0]&"時"
+		time[5]=nowtime[1]&"分"
+		time[6]=nowtime[2]&"秒"
+		time[7]=time[4]&time[5]
+		
+		res2 = res2の"%yesr%"をtime[0]に置換
+		res2 = res2の"%month%"をtime[1]に置換
+		res2 = res2の"%day%"をtime[2]に置換
+		res2 = res2の"%week%"をtime[3]に置換
+		res2 = res2の"%hour%"をtime[4]に置換
+		res2 = res2の"%minute%"をtime[5]に置換
+		res2 = res2の"%time%"をtime[7]に置換
+
+		res2で戻る
+	
+	・TemplateResponder	//「○○は××です」テンプレ。名詞を当てはめていく。
+	・MarkovResponder
+	・GoogleResponder
+
+■Emotion_c
+	・あ
+	
+■Study_c
+	・リクエスト送信(input)～
+		requestとは変数 = input
+		request = requestをUTF8N変換してURLエンコード
+		request = 「http://jlp.yahooapis.jp/MAService/V1/parse?appid=NrSkwWexg66wr80BzR2tFArSl_ouJF1nwi7jUcZOeJukyKBfDDfM7Y.LIGxLRvGIBSLhBQ--&results=ma&response=surface,pos&sentence={request}」をHTTPデータ取得
+		request = requestをSJIS変換
+		request = requestの"<word_list>"から"</word_list>"まで範囲切り取る
+		request = requestの"<word>"を""に置換
+		request = requestの"</word>"を「{改行}」に置換
+		request = requestの"<surface>"を""に置換
+		request = requestの"</surface><pos>"を","に置換
+		request = requestの"</pos>"を""に置換
+		requestで戻る
+
+　	・名詞抽出(input)～
+　		nounとは変数 = 空
+　		wordclassとは変数 = リクエスト送信(input)
+　		0から(wordclassの配列要素数-1)まで繰り返す
+	　		もし、wordclass[回数,1] == "名詞"ならば、
+	　		 	もし、noun != 空ならば、
+	　		 		nounに".*"を追加
+	　		 	nounにwordclass[回数,0]を追加
+	　	nounで戻る
+	
+	・学習テキスト作成(input)～
+		Stxtとは変数 = 名詞抽出(input)
+		Stxtに「{タブ}{input}」を追加
+		Stxtで戻る
+　		
+■AIメイン　＋Responder_c +Study_c
+	・tx_num
+	・sevetxt
+	・応答メソッド(input)～
+		反応分岐とは整数 = 99の乱数
+		もし、反応分岐>=0&&反応分岐<5ならば、
+			WhatResponder(input)
+		もし、反応分岐>=5&&反応分岐<10ならば、
+			RondomResponder()
+		もし、反応分岐>=10&&反応分岐<100ならば、
+			PatternResponder(input)
+			
+	・学習メソッド(input)～
+		sevetxtに(学習テキスト作成(input))を一行追加
+		
+	・終了メソッド()～
+		sevetxtを"StudyDictionary.txt"に追加保存
+
+				
+IAとはAIメイン
+
+入力とは変数
+返答とは変数
+テキストとは変数
+描画テキストとは変数
+初期化()
+GUI作成()
+
+
+●母艦設計
+	母艦について
+		CW=640
+		CH=480
+		タイトルは"IA"
+		ドラッグ移動=1
+		終了可能=0
+		閉じた時は
+			IAで終了メソッド
+			終了可能=1
+
+●初期化()
+	IA→ini()
+
+●GUI作成()
+	入力窓をエディタとして作成
+	入力窓→X = 30
+	入力窓→Y = 30
+	入力窓→W = 400
+	
+	反映をボタンとして作成
+	反映→X = 400
+	反映→Y = 30
+	反映→クリックした時は～
+		もし、入力窓→テキスト != 空ならば、
+			入力 = 入力窓→テキスト
+			返答 = IAで応答メソッド(入力)
+			IAで学習メソッド(入力)
+			GUIメイン(返答)
+
+●GUIメイン(output)
+	IA→tx_num = IA→tx_num + 1
+	もし、IA→tx_num >= 10 ならば、
+		1回
+			//描画テキストの1を配列削除//////////////////////////////////後回し
+	ログ描画(output)
+	
+●ログ描画(output)
+	画面クリア
+	テキストに"あなた > "を追加
+	テキストに入力を追加
+	描画テキストにテキストを一行追加
+	テキスト = 空
+	テキストに"IA > "を追加
+	テキストにoutputを追加
+	描画テキストにテキストを一行追加
+	テキスト = 空
+	入力窓→テキスト = 空
+	入力 = 空
+	返答 = 空
+	母艦の20,60へ描画テキストを文字描画
+
+
+#-----------------------------------------------------------------------
+#参考
+/*
+本解説
+http://d.hatena.ne.jp/itog/20090613/1244905238
+PHP正規表現チェッカー ver1.0.3
+http://www.rider-n.sakura.ne.jp/regexp/regexp.php
+人工無能うずら(人工痴能)の部屋
+http://www.din.or.jp/~ohzaki/uzura.htm
+人工無能「葵」
+http://marie.saiin.net/~kisuku/munou/
+
+http://developer.yahoo.co.jp/
+
+yahooデベロッパー　アプリケーションID
+NrSkwWexg66wr80BzR2tFArSl_ouJF1nwi7jUcZOeJukyKBfDDfM7Y.LIGxLRvGIBSLhBQ--
+
+サンプルリクエストURL
+http://jlp.yahooapis.jp/MAService/V1/parse?appid=<あなたのアプリケーションID>&results=ma,uniq&uniq_filter=9|10&sentence=%E5%BA%AD%E3%81%AB%E3%81%AF%E4%BA%8C%E7%BE%BD%E3%83%8B%E3%83%AF%E3%83%88%E3%83%AA%E3%81%8C%E3%81%84%E3%82%8B%E3%80%82
+
+
+｢何か入力してください。｣と尋ねる。
+文章はそれをUTF8N変換してURLエンコード。
+「http://jlp.yahooapis.jp/MAService/V1/parse?appid=NrSkwWexg66wr80BzR2tFArSl_ouJF1nwi7jUcZOeJukyKBfDDfM7Y.LIGxLRvGIBSLhBQ--&results=ma&response=surface,pos,feature&sentence={文章}」をHTTPデータ取得
+それをSJIS変換してレスポンスへ代入。
+
+レスポンス＝レスポンスの"<word_list>"から"</word_list>"まで範囲切り取る
+レスポンス＝レスポンスの"<word>"を""に置換
+レスポンス＝レスポンスの"</word>"を「{改行}」に置換
+レスポンス＝レスポンスの"<surface>"を""に置換
+レスポンス＝レスポンスの"</surface><pos>"を"-"に置換
+レスポンス＝レスポンスの"</pos>"を""に置換
+レスポンスと言う
+
+
+会話参考
+http://www8.atwiki.jp/nakamada_monge/pages/74.html
+*/

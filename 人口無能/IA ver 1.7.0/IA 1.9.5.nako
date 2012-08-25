@@ -1,0 +1,372 @@
+/*#-----------------------------------------------------------------------
+タスク
+Study_cが無意味 ←消した
+テンプレート	←辞書保存作る
+名詞がなかった場合、ほかのにする処理
+Template学習、ほかにいい方法ないか？
+
+#-----------------------------------------------------------------------*/
+!"GAMERSLIB.nako"を取り込む
+
+■Dictionary_c
+	・RondomResponse_t
+	・StudyRondomResponse_t	
+	・RondomNum
+	・Dictionary_t
+	・pattern
+	・phrases
+	・Template_t
+	・TemplateDictionary_t
+	・Dictionary_ini()～
+		RondomResponse_t = "Dictionary/RondomResponse.txt"を開く
+		StudyRondomResponse_t = "Dictionary/StudyRondomResponse.txt"を開く
+		RondomResponse_tに(StudyRondomResponse_t)を追加
+		RondomNum = RondomResponse_tの要素数
+		Dictionary_t = "Dictionary/Dictionary.txt"を開く
+		txtとは配列 = Dictionary_t
+		(txtの配列要素数)回
+			txtから「{タブ}」まで切り取ってpattern[回数-1]に代入
+			txtから「{改行}」まで切り取ってphrases[回数-1]に代入
+		Template_t = "Dictionary/Template.txt"を開く
+		TemplateDictionary_t = "Dictionary/TemplateDictionary.txt"を開く
+		TemplateDictionary_t = TemplateDictionary_tをCSV取得
+
+■Emotion_c
+	・mood{=0}
+	・{非公開}mood_max{=10}
+	・{非公開}mood_min{=-10}
+	・{非公開}mood_recover{=0.5}
+	・{非公開}flag
+	・recovermood()～
+		もし、mood > 0ならば、
+			mood = mood - mood_recover		
+		もし、mood < 0ならば、
+			mood = mood + mood_recover
+	・譏嫌値抽出(input)～
+		譏嫌値とは文字列 = inputを".+##"で正規表現マッチ
+		もし、(譏嫌値) != ""ならば、
+			flag=1
+			譏嫌値 = 譏嫌値から"#"まで切り取る
+			譏嫌値で戻る
+		違えば、
+			flag=0
+			0で戻る
+	・upmood(input)～
+		mood = mood + 譏嫌値抽出(input)
+		もし、mood > mood_maxならば、
+			mood = mood_max
+		もし、mood < mood_minならば、
+			mood = mood_min
+		outputとは変数 = input
+		もし、flag=1ならば、
+			outputから"##"まで切り取る
+		outputで戻る
+
+■GUI_c　+Emotion_c
+	・{非公開}TStxt
+	・{非公開}Drawtxt
+	・txtlog
+	・{非公開}tx_num{=0}
+	・{非公開}imgnum{=1}
+	・{非公開}顔画像
+	・ログ描画(input,output)～
+		TStxtに"あなた > "を追加
+		TStxtにinputを追加
+		DrawtxtにTStxtを一行追加
+		txtlogにTStxtを一行追加
+		TStxt = ""
+		TStxtに"IA > "を追加
+		TStxtにoutputを追加
+		DrawtxtにTStxtを一行追加
+		txtlogにTStxtを一行追加
+		TStxt = ""
+		DrawString2 ( 20 , 60 , Drawtxt , 10 , 黒 )
+	・顔画像制御()～
+		もし、mood >= 5ならば、
+			imgnum = 0 
+		もし、mood < 5&&mood > -5ならば、
+			imgnum = 1 
+		もし、mood <= -5ならば、
+			imgnum = 2
+	・ログスクロール()～
+		tx_num = tx_num + 1
+		もし、tx_num >= 10 ならば、//ログスクロール
+			Drawtxt = Drawtxtの2から30を配列取り出す
+			Drawtxtに「{改行}」を追加
+	・GUIメイン(input,output)～
+		ログスクロール()
+		ClearAllScreen(白色)
+
+		ログ描画(input,output)
+		顔画像制御()
+		DrawAlphaGraph ( 500 , 300 , 42 , 42 , 顔画像[imgnum] , 白色)
+		
+		ScreenFlipEx(SRCCOPY)	
+	・GUI_ini()～
+		GraphLib_Init ( 10 , 640 , 480 )
+		顔画像[0] = LoadGraph ( "image/機嫌いい.jpg" , 1 )
+		顔画像[1] = LoadGraph ( "image/普通.jpg" , 1 )
+		顔画像[2] = LoadGraph ( "image/機嫌悪い.jpg" , 1 )
+
+■Study_c　+Dictionary_c
+	・{非公開}Tsevetxt
+	・{非公開}Rsevetxt
+	・WhatResponderword{=""}
+	・リクエスト送信(input)～
+		requestとは配列 = input
+		request = requestをUTF8N変換してURLエンコード
+		request = 「http://jlp.yahooapis.jp/MAService/V1/parse?appid=NrSkwWexg66wr80BzR2tFArSl_ouJF1nwi7jUcZOeJukyKBfDDfM7Y.LIGxLRvGIBSLhBQ--&results=ma&response=surface,pos&sentence={request}」をHTTPデータ取得
+		request = requestをSJIS変換
+		request = requestの"<word_list>"から"</word_list>"まで範囲切り取る
+		request = requestの"<word>"を""に置換
+		request = requestの"</word>"を「{改行}」に置換
+		request = requestの"<surface>"を""に置換
+		request = requestの"</surface><pos>"を","に置換
+		request = requestの"</pos>"を""に置換
+		requestで戻る
+　	・名詞抽出(input)～
+　		nounとは配列 = ""
+　		wordclassとは配列 = リクエスト送信(input)
+　		もし、wordclass != ""ならば、	//エラー対策
+　			iで0から(wordclassの要素数-1)まで繰り返す
+	　			もし、wordclass[i,1] == "名詞"ならば、
+	　			 	もし、noun != ""ならば、
+	　			 		nounに「{改行}」を追加
+	　			 	nounにwordclass[i,0]を追加
+		　	nounで戻る
+		違えば、
+			「エラー：リクエスト送信できませんでした」と言う
+	・行列検索(input)～
+		位置とは配列
+		iで0から(TemplateDictionary_tの表列数-1)まで繰り返す
+			位置[0]＝TemplateDictionary_tのiでinputを0から表検索
+			もし、位置[0]!=-1ならば
+				位置[1]＝i	
+				位置で戻る
+		-1で戻る
+	・未知単語抽出(input)～
+		wordとは配列 = ""
+		検索語句とは配列 = 名詞抽出(input)
+		もし、検索語句 != ""ならば、	//エラー対策
+			検索語句を反復
+				flagとは配列 = 行列検索(対象)
+				もし、flag == -1ならば、
+　					もし、word != ""ならば、
+	　 					wordに「{改行}」を追加
+　					wordに対象を追加
+			wordで戻る
+			
+	・WhatResponder作成(input)～
+		wordとは配列 = 未知単語抽出(input)
+		WhatResponderword = word[0]//////////////////////////乱数のほうがいいのか？
+		WhatResponderwordで戻る
+			
+	・Template学習(input)～
+		flagとは配列 = 行列検索(input)
+		もし、(flag[1] == 0)&&(flag != -1)ならば、
+			TemplateDictionary_t[flag[0],(TemplateDictionary_t[flag[0]]の要素数)] = WhatResponderword
+			TemplateDictionary_t = TemplateDictionary_tを表CSV変換
+			TemplateDictionary_t = TemplateDictionary_tの「,,+」を","へ正規表現置換		
+			TemplateDictionary_tを"Dictionary/TemplateDictionary.txt"に保存
+			TemplateDictionary_t = TemplateDictionary_tをCSV取得
+		違えば、
+			Tsevetxtにinput&","&WhatResponderwordを一行追加
+			Tsevetxtを"Dictionary/TemplateDictionary.txt"に追加保存
+			Tsevetxt = ""
+			
+		WhatResponderword = ""
+
+	・学習メイン(input)～
+		Rsevetxtにinputを一行追加	//そのまま覚える
+	・終了テキスト保存()～
+		//Rsevetxtを"Dictionary/StudyRondomResponse.txt"に追加保存
+
+
+■Responder_c　+GUI_c　+Study_c
+	・{非公開}res
+	・WhatResponder(input)～
+		recovermood()//////////////////////////////////////////////////////
+		res=WhatResponder作成(input)
+		もし、res != ""ならば、
+			resに"って何ですか？"を追加
+		違えば、
+			res = PatternResponder(input)
+		resで戻る
+	・ReWhatResponder(input)～
+		recovermood()//////////////////////////////////////////////////////
+		Template学習(input)	
+		res = "覚えました"
+		resで戻る
+	・RondomResponder()～
+		recovermood()//////////////////////////////////////////////////////
+		res = RondomResponse_t[RondomNumの乱数]
+		resで戻る
+	・PatternResponder(input)～
+		iで0から(patternの要素数)まで繰り返す
+			マッチ文字とは文字列 = inputを(pattern[i])で正規表現マッチ
+			もし、(マッチ文字) != ""ならば、
+				M_phrasesとは文字列 = phrases[i]				
+				マッチ数とは整数 = M_phrasesで"|"の出現回数
+				もし、マッチ数 != 0ならば、
+					D_phrasesとは変数 = M_phrasesを"|"で区切る
+					確率とは整数 = （マッチ数+1)の乱数
+					res=D_phrases[確率]
+				違えば、
+					res=M_phrases
+				res = resの"%match%"をマッチ文字に置換
+				res = 特殊コード置換(res)
+				res = upmood(res)///////////////////////////////////////感情操作
+				resで戻る
+		RondomResponder()で戻る
+	
+	・特殊コード置換(input)～
+		res2とは文字列 = input
+		nowtimeとは配列 = (今)
+		nowtime=nowtimeを":"で区切る
+		daytimeとは配列 = (今日)
+		daytime=daytimeを"/"で区切る
+		
+		time[0]=daytime[0]&"年"
+		time[1]=daytime[1]&"月"
+		time[2]=daytime[2]&"日"
+		time[3]=今日の曜日&"曜日"
+		time[4]=nowtime[0]&"時"
+		time[5]=nowtime[1]&"分"
+		time[6]=nowtime[2]&"秒"
+		time[7]=time[4]&time[5]
+		
+		res2 = res2の"%yesr%"をtime[0]に置換
+		res2 = res2の"%month%"をtime[1]に置換
+		res2 = res2の"%day%"をtime[2]に置換
+		res2 = res2の"%week%"をtime[3]に置換
+		res2 = res2の"%hour%"をtime[4]に置換
+		res2 = res2の"%minute%"をtime[5]に置換
+		res2 = res2の"%time%"をtime[7]に置換
+
+		res2で戻る
+	
+	・TemplateResponder	//「○○は××です」テンプレ。名詞を当てはめていく。
+		
+	
+	
+	・MarkovResponder
+	・GoogleResponder
+　		
+■AIメイン　＋Responder_c
+	・{非公開}response
+	・応答メソッド(input)～
+		もし、WhatResponderword == ""ならば、
+			//「」という
+			反応とは整数 = 99の乱数
+			もし、反応>=0&&反応<98ならば、
+				response = WhatResponder(input)
+			もし、反応>=98&&反応<99ならば、
+				response = RondomResponder()
+			もし、反応>=99&&反応<100ならば、
+				response = PatternResponder(input)
+		違えば、
+			response = ReWhatResponder(input)
+		responseで戻る	
+	・学習メソッド(input)～
+		学習メイン(input)
+	・終了メソッド()～
+		終了テキスト保存()
+		(txtlog)と言う
+		
+				
+入力とは文字列
+返答とは文字列
+IAとはAIメイン
+初期化()
+GUI作成()
+
+●母艦設計
+	母艦について
+		CW=640
+		CH=480
+		タイトルは"IA"
+		ドラッグ移動=1
+		終了可能=0
+		閉じた時は
+			IA→終了メソッド()
+			終了可能=1
+
+●初期化()
+	IA→Dictionary_ini()
+	IA→GUI_ini()
+
+●GUI作成()
+	入力窓をエディタとして作成
+	入力窓→X = 30
+	入力窓→Y = 30
+	入力窓→W = 400
+	入力窓→IME = IMEオン
+	
+	反映をボタンとして作成
+	反映→X = 400
+	反映→Y = 30
+	反映→クリックした時は～
+		もし、入力窓→テキスト != ""ならば、
+			入力 = 入力窓→テキスト
+			返答 = IA→応答メソッド(入力)
+			IA→学習メソッド(入力)
+			IA→GUIメイン(入力,返答)
+			入力窓→テキスト = ""
+			入力 = ""
+			返答 = ""
+
+#-----------------------------------------------------------------------
+#参考
+/*
+本解説
+http://d.hatena.ne.jp/itog/20090613/1244905238
+PHP正規表現チェッカー ver1.0.3
+http://www.rider-n.sakura.ne.jp/regexp/regexp.php
+人工無能うずら(人工痴能)の部屋
+http://www.din.or.jp/~ohzaki/uzura.htm
+人工無能「葵」
+http://marie.saiin.net/~kisuku/munou/
+
+http://developer.yahoo.co.jp/
+
+yahooデベロッパー　アプリケーションID
+NrSkwWexg66wr80BzR2tFArSl_ouJF1nwi7jUcZOeJukyKBfDDfM7Y.LIGxLRvGIBSLhBQ--
+
+サンプルリクエストURL
+http://jlp.yahooapis.jp/MAService/V1/parse?appid=<あなたのアプリケーションID>&results=ma,uniq&uniq_filter=9|10&sentence=%E5%BA%AD%E3%81%AB%E3%81%AF%E4%BA%8C%E7%BE%BD%E3%83%8B%E3%83%AF%E3%83%88%E3%83%AA%E3%81%8C%E3%81%84%E3%82%8B%E3%80%82
+
+
+｢何か入力してください。｣と尋ねる。
+文章はそれをUTF8N変換してURLエンコード。
+「http://jlp.yahooapis.jp/MAService/V1/parse?appid=NrSkwWexg66wr80BzR2tFArSl_ouJF1nwi7jUcZOeJukyKBfDDfM7Y.LIGxLRvGIBSLhBQ--&results=ma&response=surface,pos,feature&sentence={文章}」をHTTPデータ取得
+それをSJIS変換してレスポンスへ代入。
+
+レスポンス＝レスポンスの"<word_list>"から"</word_list>"まで範囲切り取る
+レスポンス＝レスポンスの"<word>"を""に置換
+レスポンス＝レスポンスの"</word>"を「{改行}」に置換
+レスポンス＝レスポンスの"<surface>"を""に置換
+レスポンス＝レスポンスの"</surface><pos>"を"-"に置換
+レスポンス＝レスポンスの"</pos>"を""に置換
+レスポンスと言う
+
+
+会話参考
+http://www8.atwiki.jp/nakamada_monge/pages/74.html
+
+http://blog.mwsoft.jp/article/29473361.html
+*/
+/*
+#-----------------------------------------------------------------------
+//実行ライン
+(1)の間
+	ClearAllScreen(白色)
+
+	DrawAlphaGraph ( 10 , 10 , 284 , 124 , ワニ , 白色)
+
+	ScreenFlipEx(SRCCOPY)
+	FIXFPS ( 60 )
+ここまで
+#-----------------------------------------------------------------------
+*/
+
+

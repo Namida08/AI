@@ -1,0 +1,98 @@
+■Responder_c　+GUI_c　+Study_c
+	・{非公開}res
+	・WhatResponder(input,request)～
+		recovermood()//////////////////////////////////////////////////////感情操作
+		res=WhatResponder作成(request)
+		もし、res != ""ならば、
+			resに"って何ですか？"を追加
+		違えば、
+			res = PatternResponder(input)
+		resで戻る
+	・ReWhatResponder(input)～
+		recovermood()//////////////////////////////////////////////////////感情操作
+		res = TemplateDictionary学習(input)
+		resで戻る
+	・RondomResponder()～
+		recovermood()//////////////////////////////////////////////////////感情操作
+		res = RondomResponse_t[(RondomNum*10の乱数)%RondomNum]////////////////乱数調整							//乱数複雑に
+		resで戻る
+	・PatternResponder(input)～
+		iで0から(patternの要素数)まで繰り返す
+			マッチ文字とは文字列 = inputを(pattern[i])で正規表現マッチ
+			もし、(マッチ文字) != ""ならば、
+				M_phrasesとは文字列 = phrases[i]				
+				マッチ数とは整数 = M_phrasesで"|"の出現回数
+				もし、マッチ数 != 0ならば、
+					D_phrasesとは変数 = M_phrasesを"|"で区切る
+					確率とは整数 = （マッチ数+1)の乱数////////////////////////乱数調整
+					res=D_phrases[確率]
+				違えば、
+					res=M_phrases
+				res = resの"%match%"をマッチ文字に置換
+				res = 特殊コード置換(res)
+				res = upmood(res)///////////////////////////////////////感情操作
+				resで戻る
+		RondomResponder()で戻る
+	
+	・特殊コード置換(input)～
+		res2とは文字列 = input
+		nowtimeとは配列 = (今)
+		nowtime=nowtimeを":"で区切る
+		daytimeとは配列 = (今日)
+		daytime=daytimeを"/"で区切る
+
+		time[0]=daytime[0]&"年"
+		time[1]=daytime[1]&"月"
+		time[2]=daytime[2]&"日"
+		time[3]=今日の曜日&"曜日"
+		time[4]=nowtime[0]&"時"
+		time[5]=nowtime[1]&"分"
+		time[6]=nowtime[2]&"秒"
+		time[7]=time[4]&time[5]
+		
+		res2 = res2の"%yesr%"をtime[0]に置換
+		res2 = res2の"%month%"をtime[1]に置換
+		res2 = res2の"%day%"をtime[2]に置換
+		res2 = res2の"%week%"をtime[3]に置換
+		res2 = res2の"%hour%"をtime[4]に置換
+		res2 = res2の"%minute%"をtime[5]に置換
+		res2 = res2の"%time%"をtime[7]に置換
+		
+		res2 = res2の"%greet%"をGreet_t[nowtime[0]]に置換
+		
+		res2で戻る
+	
+	・TemplateResponder(input,request)～	//「○○は××です」テンプレ。名詞を当てはめていく。
+		nounとは配列 = 名詞抽出(request)
+		wordとは配列 = ""
+		もし、noun != ""ならば、
+			iで0から(Template_tの要素数-1)まで繰り返す
+				nounで反復
+					もし、Template_t[i]を対象で正規表現マッチ != ""ならば、
+						res = Template_t[i]
+						もし、word != ""ならば、
+	　 						wordに「{改行}」を追加
+　						wordに対象を追加
+　				もし、word != ""ならば、
+　					抜ける
+			もし、word != ""ならば、
+				wordで反復
+					pos = 行列検索(対象)
+					もし、(pos[1] == 0)&&(pos != -1)ならば、
+						res = resの「[{対象}]」を(TemplateDictionary_t[pos[0],1])に置換/////////////////乱数にしたい
+			違えば、
+				res = PatternResponder(input)	
+		違えば、
+			res = PatternResponder(input)		
+		resで戻る
+	
+	・QuestionResponder()～
+		
+	
+	・MarkovResponder
+	・GoogleResponder(input)～
+		wordとは文字列 = input
+		word = wordの"((って|て)何)|(を|で)*(検索)|(を|で|って|て)*(調べて)|(を|で|って|て)*((ググ|ぐぐ)(ル|る|って))"を""へ正規表現置換
+		(word)でググる
+		res = "どうぞ"
+		resで戻る
