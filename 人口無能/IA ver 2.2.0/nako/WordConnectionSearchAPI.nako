@@ -1,0 +1,162 @@
+#関連ワード検索
+!`nako/DevID.nako`を取り込む
+
+
+/*
+例外処理が正しくない可能性がある。
+具体的には、リストの個数カウントの直前や、リストアップされたキーワードそのものに問題がある可能性。
+*/
+
+//キーセンテンス←まだ使ってない、形態素解析で名詞を出して代用
+//http://jlp.yahooapis.jp/KeyphraseService/V1/extract?appid=<あなたのアプリケーションID>&sentence=<対象のテキスト>
+
+//WEB
+//http://search.yahooapis.jp/PremiumWebSearchService/V1/webSearch?appid=<あなたのアプリケーションID>&query=%e6%b2%96%e7%b8%84&results=2
+
+/* 
+** WEB検索にはTatumaki所有のYahooデベロッパーIDを使っています。
+** このプロジェクト意外での利用はご遠慮ください。
+*/
+
+
+!関連DEBUG=0
+!WEBDEBUG=0
+
+//ログを記録するかどうか。
+LOG_WEB_RELATEDとは整数=1
+経過ダイアログ = 0
+
+もし、関連DEBUG==1ならば、
+	関連検索(`Tatumaki`)を言う
+
+
+
+//キーワードSでWEB検索をかけ、その結果を形態素解析後、名詞をデータベースに追加し、
+//その中で最も多かったワードを表示する。
+●関連検索(S)
+	web_resultとは配列=``
+	Keyword_listとは配列=``
+	noun_listとは配列=``
+	result_listとは配列=``
+	
+	//検索結果のリストを出す。
+	web_result=WEB検索(S)
+	
+	//文字列だけを切り取って返す
+	Keyword_list=string_webHTMLanalize(web_result)
+
+	
+	//それを反復し、名詞を切り取ってくる
+	Keyword_listを反復
+		noun_listにstring_getNoun(string_形態素解析(対象))を配列追加
+	ここまで
+	
+	排除(noun_list,S)
+	排除(noun_list,`amp`)
+	排除(noun_list,`middot`)
+	排除(noun_list,`サイト`)
+	正規表現修飾子=`gmki`
+	noun_list=noun_listのSを``へ正規表現置換
+	//noun_listを言う
+	
+	result_list=CountWord(noun_list)
+	
+	もし、LOG_WEB_RELATED==1ならば、
+		result_listを母艦パス&`WEB_LOG\`&S&`.txt`に保存
+	
+	result_list[0,0]で戻る。
+
+
+●WEB検索(S)
+	S=`"`&S&`"`
+	S=Sを`SJIS`から`UTF-8N`へ文字コード変換
+	S=SをURLエンコード
+	dataとは文字列
+	URLとは文字列=「http://search.yahooapis.jp/PremiumWebSearchService/V1/webSearch?appid={YAHOOUPAPPID}&query={S}&results=10」
+	data=URLからHTTPデータ取得してSJIS変換
+	//もし、WEBDEBUG==1ならば、dataを言う
+	dataで戻る。
+
+●string_webHTMLanalize(S)
+	Titlebufとは配列
+	Summarybufとは配列
+	Titlebuf=Sから`Title`をタグ切り出し
+	Summarybuf=Sから`Summary`をタグ切り出し
+	S=Titlebuf&Summarybuf
+	S=Sのタグ削除
+	Sで戻る
+
+●string_形態素解析(S)
+	S=`"`&S&`"`
+	S=Sを`SJIS`から`UTF-8N`へ文字コード変換
+	S=SをURLエンコード
+	dataとは文字列
+	URLとは文字列=「http://jlp.yahooapis.jp/MAService/V1/parse?appid={YAHOOAPPID}&results=ma&response=surface,pos&uniq_filter=9&sentence={S}」
+	data=URLからHTTPデータ取得してSJIS変換
+	dataで戻る
+
+//リザルトから名詞のみをピックアップする
+●string_getNoun(S)
+	posとは配列
+	Nounとは配列
+	S=Sの`>`を`>`&改行に置換
+	
+	S=Sのタグ削除
+	空行削除(S)
+	S=Sの改行&`名詞`を`=名詞`に置換
+	指定外除外(S,`=名詞`)
+	排除(S,`=名詞`)
+	S=Sの改行を`,`に置換
+	Sで戻る
+
+
+#-----------------------------------------------------------------------
+
+●排除({参照渡し}S,word)
+	S=Sのwordを``に置換
+
+●指定外除外({参照渡し}LIST,S)
+	bufとは配列
+	LISTを反復
+		もし、(対象の1からSを文字検索)!=0ならば、
+			bufに対象を配列追加
+	ここまで
+	LIST=buf
+	bufで戻る。
+
+●空行削除({参照渡し}S)
+	bufとは配列
+	Sを反復
+		もし、対象!=空ならば、
+			bufに対象を配列追加
+	ここまで
+	S=buf
+	Sで戻る。
+
+
+//与えられたリストをソートし、出現回数を配列で返す。
+●CountWord(LIST)
+	IDとは配列
+	bufIDとは配列
+	LIST=LISTの`,`を改行に置換
+	空行削除(LIST)
+	LISTを配列ソート
+	
+	ID=LISTの0を表重複削除
+	bufID=ID
+	
+	rowとは整数
+	row=LISTの配列要素数
+	
+	bufとは配列
+	IDを反復
+		buf=LISTの対象を``に置換
+		空行削除(buf)
+		buf=bufの配列要素数
+		bufID[回数-1,1]=row-buf
+	
+	
+	bufIDの1を表数値ソート
+	bufIDを配列逆順
+
+	bufIDで戻る。

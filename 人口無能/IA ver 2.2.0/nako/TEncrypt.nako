@@ -1,0 +1,85 @@
+/*-----------------------------------------------------------------------
+# encroding: s-jis
+# Tatumaki式 Encrypter
+# 
+# 製作者	: Tatumaki
+# バージョン: 0.0.1
+# 
+# 注意事項:
+#  独自の簡易暗号化関数です。
+#  暗号化の深度は浅く、処理も冗長的です。
+#  多用は推奨されませんが、簡易的な暗号化に便利です。
+#  配布の際はソースコードに埋めて解法が分からないように努めて下さい。
+#
+-----------------------------------------------------------------------*/
+
+●Encrypt(S)
+	AAとは整数=0
+　　CODEとは文字列=空
+　　NUMとは文字列
+　　NUM2とは文字列
+　　RunNumとは整数
+　　暗号化値=S
+　　暗号化値を文字列分解して反復
+		NUM=対象をバイナリダンプ
+		NUM2=INT(「${NUM}」)　　＃ここまでで文字がHEXから１０進数化された。例えば、A=H41=97
+		乱数処理でループ
+　　　　	RunNumは10の乱数。
+　　　　	もし、それが1以上なら、
+　　　　　　	抜ける。
+　　　　NUM2=NUM2*RunNum
+　　　　AtNum	=RunNum*64
+		ENDNUM1 =RunNum*33
+		ENDNUM2	=RunNum*101
+		ENDNUM3	=RunNum*110
+		ENDNUM4	=RunNum*100
+		「{AtNum}」&「{NUM2}」&『-』をCODEに追加
+	「{CODE}」&「{AtNum}{ENDNUM1}-」&「{AtNum}{ENDNUM2}-」&「{AtNum}{ENDNUM3}-」&「{AtNum}{ENDNUM4}」で戻る
+
+
+●Decrypt(C,jpn)
+	ANSERCODE2とは文字列=空
+	HEXCODEとは文字列	=空
+	OCODEとは文字列
+	RCODEとは文字列
+	FLAGとは整数=0
+	Cを『-』で区切って反復
+		OCODEはそれ。
+		FLAG=0
+		(FLAG<=0)間、
+			RCODE=OCODE
+			乱数処理でループ
+　　　　		もし、(10の乱数)>=1なら、
+　　　　			FRunNum=それ
+　　　　　　		抜ける。
+　　　　　　GqCODE=RCODE/FRunNum
+			GCODE=GqCODEの2文字左部分
+			GACODE=HEX(GCODE)
+			HEXDECODE=GACODEをHEXデコード
+			もし、HEXDECODEが『@』ならば、
+				GqCODEの1から2文字削除。
+				DONECODE=HEX(GqCODE)をHEXデコード
+				DONECODEをHEXCODEに追加。
+				FLAG=1
+			違えば、
+				続ける。
+	もし、HEXCODEの4文字右部分が`!end`ならば、
+	　　HEXCODEから4文字右端削除。
+		ANSERCODE1=「{それ}{改行}{改行}」
+	　　もし、jpn==1ならば、
+		　　ANSERCODE1をローマ字カナ変換。
+		　　それを全角変換。
+		　　それをかな変換。
+		　　それをANSERCODE2に追加。
+		違えば、
+	　　	ANSERCODE1をANSERCODE2に追加。
+	違えば、
+		HEXCODEは空。
+		続ける。
+	
+	bufとは文字列=``
+	ANSERCODE2を反復
+		もし、対象!=空ならば、
+			bufに対象を配列追加
+	ここまで
+	bufで戻る
